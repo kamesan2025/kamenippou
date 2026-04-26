@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>かめライフサポート 運転日報</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{font-family:'Hiragino Sans','Meiryo',sans-serif;background:#f0f0eb;color:#1a1a1a;padding-bottom:60px}
+.header{background:#1D9E75;color:#fff;padding:14px 16px;position:sticky;top:0;z-index:100}
+.header h1{font-size:18px;font-weight:700;margin-bottom:4px}
+.seqbadge{display:inline-block;background:rgba(255,255,255,0.25);border-radius:6px;padding:3px 10px;font-size:13px;font-weight:600}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #e0e0d8;overflow-x:auto}
+.tab{flex:1;min-width:100px;padding:14px 8px;font-size:15px;font-weight:600;cursor:pointer;border:none;background:transparent;color:#999;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;text-align:center}
+.tab.active{color:#1D9E75;border-bottom-color:#1D9E75}
+.content{padding:12px 14px}
+.section{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #e8e8e0}
+.sec-title{font-size:12px;font-weight:700;color:#888;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f0f0e8}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field:last-child{margin-bottom:0}
+.field label{font-size:14px;color:#555;font-weight:600}
+.field input,.field select,.field textarea{font-size:16px;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;background:#fafafa;color:#1a1a1a;width:100%;outline:none;appearance:none;-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#1D9E75;background:#fff}
+.field textarea{resize:vertical;min-height:80px;line-height:1.6}
+.field input[readonly]{background:#f0f0eb;color:#888}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rbtn-group{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.rbtn{font-size:15px;padding:10px 16px;border:1.5px solid #ddd;border-radius:25px;cursor:pointer;color:#777;background:#fafafa;user-select:none;touch-action:manipulation;font-weight:500}
+.rbtn.sel-ari{background:#E1F5EE;border-color:#1D9E75;color:#085041;font-weight:700}
+.rbtn.sel-nashi{background:#f0f0eb;border-color:#ccc;color:#888}
+.rbtn.sel-opt{background:#E6F1FB;border-color:#378ADD;color:#0C447C;font-weight:700}
+.rbtn.sel-driver{background:#EEEDFE;border-color:#7F77DD;color:#3C3489;font-weight:700}
+.rbtn.sel-use{background:#FAEEDA;border-color:#BA7517;color:#633806;font-weight:700}
+.rbtn.sel-route{background:#FAECE7;border-color:#D85A30;color:#712B13;font-weight:700}
+.alc-block{padding:12px 0;border-bottom:1px solid #f0f0e8}
+.alc-block:last-child{border-bottom:none}
+.alc-title{font-size:15px;font-weight:700;color:#555;margin-bottom:10px}
+.alc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check-list{display:flex;flex-direction:column;gap:8px}
+.chk-item{display:flex;align-items:center;gap:12px;font-size:16px;padding:12px 14px;border:1.5px solid #e0e0d8;border-radius:10px;cursor:pointer;user-select:none;touch-action:manipulation;background:#fafafa}
+.chk-item.ck{background:#E1F5EE;border-color:#1D9E75;color:#085041;font-weight:600}
+.chk-item input[type=checkbox]{width:22px;height:22px;accent-color:#1D9E75;flex-shrink:0}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.sum-card{background:#f5f5f0;border-radius:10px;padding:14px;text-align:center}
+.sum-val{font-size:22px;font-weight:700;color:#1a1a1a}
+.sum-lbl{font-size:13px;color:#888;margin-top:3px}
+.send-btn{width:100%;padding:18px;font-size:17px;font-weight:700;background:#1D9E75;color:#fff;border:none;border-radius:12px;cursor:pointer;touch-action:manipulation;letter-spacing:.03em}
+.send-btn:active{background:#0F6E56}
+.send-btn:disabled{background:#9FE1CB}
+.status{padding:14px 16px;border-radius:10px;font-size:15px;margin-top:12px;display:none;line-height:1.6}
+.status.ok{background:#E1F5EE;color:#085041;border:1.5px solid #5DCAA5}
+.status.err{background:#FCEBEB;color:#791F1F;border:1.5px solid #F09595}
+.status.loading{background:#E6F1FB;color:#0C447C;border:1.5px solid #85B7EB}
+.view{display:none}.view.active{display:block}
+.stat-sel{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.stat-sel select{font-size:16px;padding:10px 14px;border:1.5px solid #ddd;border-radius:10px;background:#fafafa;color:#1a1a1a;appearance:none;-webkit-appearance:none}
+.stat-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.stat-table{width:100%;border-collapse:collapse;font-size:14px;min-width:500px}
+.stat-table th{background:#f5f5f0;padding:10px 10px;text-align:left;font-weight:700;color:#777;border-bottom:1.5px solid #e0e0d8;white-space:nowrap}
+.stat-table td{padding:9px 10px;border-bottom:1px solid #f0f0e8;white-space:nowrap}
+.stat-table tr:active td{background:#fafafa}
+.stat-sum td{font-weight:700;background:#f5f5f0}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-lbl{font-size:13px;color:#777;width:80px;text-align:right;flex-shrink:0}
+.bar-track{flex:1;height:16px;background:#f0f0e8;border-radius:8px;overflow:hidden}
+.bar-fill{height:100%;border-radius:8px;background:#1D9E75}
+.bar-val{font-size:13px;color:#888;width:66px;flex-shrink:0}
+.csv-btn{width:100%;padding:16px;font-size:16px;font-weight:600;background:#fff;color:#1D9E75;border:1.5px solid #1D9E75;border-radius:12px;cursor:pointer;touch-action:manipulation}
+.total-row{background:#f5f5f0;border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.total-row .lbl{font-size:14px;color:#777;font-weight:600}
+.total-row .val{font-size:22px;font-weight:700;color:#1D9E75}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>かめライフサポート　運転日報</h1>
+  <span class="seqbadge" id="seqBadge">通し番号: —</span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('input')">日報入力</button>
+  <button class="tab" onclick="switchTab('stats')">売上集計</button>
+</div>
+
+<div class="content">
+
+<div class="view active" id="view-input">
+
+<div class="section">
+  <div class="sec-title">基本情報</div>
+  <div class="grid2">
+    <div class="field"><label>日付</label><input type="date" id="date" oninput="onDateChange()"/></div>
+    <div class="field"><label>曜日</label><input type="text" id="weekday" readonly/></div>
+  </div>
+  <div class="grid2">
+    <div class="field"><label>今年番号</label><input type="number" id="yearNo" placeholder="例: 57" inputmode="numeric"/></div>
+    <div class="field"><label>通し番号</label><input type="number" id="seqNo" placeholder="例: 232" inputmode="numeric" oninput="updateBadge()"/></div>
+  </div>
+  <div class="field"><label>お客様氏名</label><input type="text" id="customerName" placeholder="氏名" autocomplete="off"/></div>
+  <div class="grid2">
+    <div class="field"><label>同乗者数</label><input type="number" id="companion" placeholder="0" inputmode="numeric"/></div>
+    <div class="field"><label>連絡先</label><input type="tel" id="contact" placeholder="電話番号"/></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-title">運行情報</div>
+  <div class="grid2">
+    <div class="field"><label>出発時刻</label><input type="time" id="depTime"/></div>
+    <div class="field"><label>出発場所</label><input type="text" id="depPlace" placeholder="出発地" autocomplete="off"/></div>
+  </div>
+  <div class="grid2">
+    <div class="field"><label>経由地時刻</label><input type="time" id="viaTime"/></div>
+    <div class="field"><label>経由地</label><input type="text" id="viaPlace" placeholder="経由地（任意）" autocomplete="off"/></div>
+  </div>
+  <div class="grid2">
+    <div class="field"><label>到着時刻</label><input type="time" id="arrTime"/></div>
+    <div class="field"><label>到着場所</label><input type="text" id="arrPlace" placeholder="目的地" autocomplete="off"/></div>
+  </div>
+  <div class="grid2">
+    <div class="field"><label>距離 (km)</label><input type="number" id="distance" placeholder="0" inputmode="decimal" step="0.1"/></div>
+    <div class="field"><label>走行距離 (km)</label><input type="number" id="totalDist" placeholder="0" inputmode="numeric"/></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-title">サービス区分</div>
+  <div class="field">
+    <label>ケアサービス</label>
+    <div class="rbtn-group" id="care">
+      <span class="rbtn" onclick="pick('care',this,'sel-ari')">あり</span>
+      <span class="rbtn" onclick="pick('care',this,'sel-nashi')">なし</span>
+    </div>
+  </div>
+  <div class="field">
+    <label>障害者割引</label>
+    <div class="rbtn-group" id="handicap">
+      <span class="rbtn" onclick="pick('handicap',this,'sel-ari')">あり</span>
+      <span class="rbtn" onclick="pick('handicap',this,'sel-nashi')">なし</span>
+    </div>
+  </div>
+  <div class="field">
+    <label>機材オプション</label>
+    <div class="rbtn-group" id="equipment">
+      <span class="rbtn" onclick="pick('equipment',this,'sel-opt')">普通車椅子</span>
+      <span class="rbtn" onclick="pick('equipment',this,'sel-opt')">リクライニング</span>
+      <span class="rbtn" onclick="pick('equipment',this,'sel-opt')">フルリク</span>
+      <span class="rbtn" onclick="pick('equipment',this,'sel-opt')">ストレッチャー</span>
+      <span class="rbtn" onclick="pick('equipment',this,'sel-opt')">なし</span>
+    </div>
+  </div>
+  <div class="field">
+    <label>運転手名</label>
+    <div class="rbtn-group" id="driver">
+      <span class="rbtn" onclick="pick('driver',this,'sel-driver')">亀村あゆみ</span>
+      <span class="rbtn" onclick="pick('driver',this,'sel-driver')">杉本静香</span>
+    </div>
+  </div>
+  <div class="field">
+    <label>利用用途</label>
+    <div class="rbtn-group" id="usage">
+      <span class="rbtn" onclick="pick('usage',this,'sel-use')">移送のみ</span>
+      <span class="rbtn" onclick="pick('usage',this,'sel-use')">民間救急</span>
+      <span class="rbtn" onclick="pick('usage',this,'sel-use')">移送＋サポート</span>
+      <span class="rbtn" onclick="pick('usage',this,'sel-use')">保険外のみ</span>
+    </div>
+  </div>
+  <div class="field">
+    <label>紹介経路</label>
+    <div class="rbtn-group" id="introRoute">
+      <span class="rbtn" onclick="pick('introRoute',this,'sel-route')">リピート</span>
+      <span class="rbtn" onclick="pick('introRoute',this,'sel-route')">ネット/チラシ</span>
+      <span class="rbtn" onclick="pick('introRoute',this,'sel-route')">ケアマネ</span>
+      <span class="rbtn" onclick="pick('introRoute',this,'sel-route')">地域連携</span>
+      <span class="rbtn" onclick="pick('introRoute',this,'sel-route')">他業者</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-title">料金</div>
+  <div class="grid2">
+    <div class="field"><label>現金 (円)</label><input type="number" id="cash" placeholder="0" inputmode="numeric" oninput="updateSum()"/></div>
+    <div class="field"><label>クレジット (円)</label><input type="number" id="credit" placeholder="0" inputmode="numeric" oninput="updateSum()"/></div>
+  </div>
+  <div class="grid2">
+    <div class="field"><label>タクシー券 (円)</label><input type="number" id="taxiTicket" placeholder="0" inputmode="numeric" oninput="updateSum()"/></div>
+    <div class="field"><label>生保・振込 (円)</label><input type="number" id="transfer" placeholder="0" inputmode="numeric" oninput="updateSum()"/></div>
+  </div>
+  <div class="grid2">
+    <div class="field"><label>オプション料金 (円)</label><input type="number" id="optionFee" placeholder="0" inputmode="numeric" oninput="updateSum()"/></div>
+    <div class="field"><label>実費 (高速等) (円)</label><input type="number" id="expense" placeholder="0" inputmode="numeric" oninput="updateSum()"/></div>
+  </div>
+  <div class="total-row">
+    <span class="lbl">合計売上</span>
+    <span class="val" id="totalFee">¥0</span>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-title">アルコールチェック</div>
+  <div class="alc-block">
+    <div class="alc-title">乗務前</div>
+    <div class="grid2">
+      <div class="field"><label>測定値 (mg/L)</label><input type="text" id="alc_b_val" placeholder="0.00" inputmode="decimal"/></div>
+      <div class="field"><label>時刻</label><input type="time" id="alc_b_time"/></div>
+    </div>
+    <div class="field">
+      <label>結果</label>
+      <div class="rbtn-group" id="alc_before">
+        <span class="rbtn" onclick="pick('alc_before',this,'sel-nashi')">異常なし</span>
+        <span class="rbtn" onclick="pick('alc_before',this,'sel-ari')" style="color:#A32D2D">要確認</span>
+      </div>
+    </div>
+    <div class="field"><label>確認者</label><input type="text" id="alc_b_checker" value="亀村" autocomplete="off"/></div>
+  </div>
+  <div class="alc-block">
+    <div class="alc-title">乗務後</div>
+    <div class="grid2">
+      <div class="field"><label>測定値 (mg/L)</label><input type="text" id="alc_a_val" placeholder="0.00" inputmode="decimal"/></div>
+      <div class="field"><label>時刻</label><input type="time" id="alc_a_time"/></div>
+    </div>
+    <div class="field">
+      <label>結果</label>
+      <div class="rbtn-group" id="alc_after">
+        <span class="rbtn" onclick="pick('alc_after',this,'sel-nashi')">異常なし</span>
+        <span class="rbtn" onclick="pick('alc_after',this,'sel-ari')" style="color:#A32D2D">要確認</span>
+      </div>
+    </div>
+    <div class="field"><label>確認者</label><input type="text" id="alc_a_checker" value="亀村" autocomplete="off"/></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-title">車両点検</div>
+  <div class="check-list" id="vehicleChecks"></div>
+  <div class="field" style="margin-top:12px"><label>特記事項</label><textarea id="vehicleNote" placeholder="気になる点があれば記入"></textarea></div>
+</div>
+
+<div class="section">
+  <div class="sec-title">備考・申し送り</div>
+  <div class="field"><textarea id="remarks" placeholder="特記事項・申し送り事項など"></textarea></div>
+</div>
+
+<div class="section">
+  <div class="sum-grid">
+    <div class="sum-card"><div class="sum-val" id="s_cash">¥0</div><div class="sum-lbl">現金</div></div>
+    <div class="sum-card"><div class="sum-val" id="s_credit">¥0</div><div class="sum-lbl">クレジット</div></div>
+    <div class="sum-card"><div class="sum-val" id="s_transfer">¥0</div><div class="sum-lbl">生保・振込</div></div>
+    <div class="sum-card"><div class="sum-val" id="s_total">¥0</div><div class="sum-lbl">合計</div></div>
+  </div>
+  <button class="send-btn" id="sendBtn" onclick="submitRecord()">スプレッドシートに送信して保存</button>
+  <div class="status" id="statusBox"></div>
+</div>
+
+</div>
+
+<div class="view" id="view-stats">
+<div class="section">
+  <div class="stat-sel">
+    <select id="statMode" onchange="renderStats()">
+      <option value="month">月別</option>
+      <option value="year">年別</option>
+    </select>
+    <select id="statYear" onchange="renderStats()"></select>
+    <select id="statMonth" onchange="renderStats()"></select>
+  </div>
+  <div class="sum-grid" id="statCards"></div>
+</div>
+<div class="section">
+  <div class="sec-title">売上明細</div>
+  <div class="stat-table-wrap">
+    <table class="stat-table">
+      <thead><tr id="statHead"></tr></thead>
+      <tbody id="statBody"></tbody>
+    </table>
+  </div>
+</div>
+<div class="section">
+  <div class="sec-title">紹介経路</div>
+  <div id="routeBar"></div>
+</div>
+<div class="section">
+  <div class="sec-title">利用用途</div>
+  <div id="usageBar"></div>
+</div>
+<div class="section">
+  <button class="csv-btn" onclick="exportCSV()">バックアップCSVをダウンロード</button>
+</div>
+</div>
+
+</div>
+
+<script>
+const GAS_URL='https://script.google.com/macros/s/AKfycbyw_lEzA2MNxbD0FAayXs3cp0RLPDOyLou2istzxQkgq4yrCSSPT4LV78rrcZOI3U0u/exec';
+const DAYS=['日','月','火','水','木','金','土'];
+const VCHECKS=['エンジンオイル','冷却水','タイヤ空気圧','タイヤ摩耗','ブレーキ','ウィンカー','ヘッドライト','車内清潔','車椅子固定','消火器','救急セット'];
+const pickMap={};
+
+const vc=document.getElementById('vehicleChecks');
+VCHECKS.forEach(c=>{
+  const l=document.createElement('label');
+  l.className='chk-item';
+  l.innerHTML=`<input type="checkbox" onchange="this.parentElement.classList.toggle('ck',this.checked)"> ${c}`;
+  vc.appendChild(l);
+});
+
+function pick(group,el,cls){
+  document.querySelectorAll(`#${group} .rbtn`).forEach(b=>b.className='rbtn');
+  el.className='rbtn '+cls;
+  pickMap[group]=el.textContent.trim();
+}
+function gp(g){return pickMap[g]||'';}
+function gv(id){return(document.getElementById(id)||{}).value||'';}
+function ni(id){return parseInt(document.getElementById(id)?.value)||0;}
+
+function onDateChange(){
+  const d=document.getElementById('date').value;
+  if(d) document.getElementById('weekday').value=DAYS[new Date(d).getDay()];
+  updateBadge();
+}
+function updateBadge(){
+  const s=gv('seqNo'),y=gv('yearNo');
+  let t='';
+  if(s) t+='通し:'+s;
+  if(y) t+=(t?' / ':'')+y+'番';
+  document.getElementById('seqBadge').textContent=t||'通し番号: —';
+}
+function updateSum(){
+  const t=ni('cash')+ni('credit')+ni('taxiTicket')+ni('transfer')+ni('optionFee');
+  document.getElementById('totalFee').textContent='¥'+t.toLocaleString();
+  document.getElementById('s_cash').textContent='¥'+ni('cash').toLocaleString();
+  document.getElementById('s_credit').textContent='¥'+ni('credit').toLocaleString();
+  document.getElementById('s_transfer').textContent='¥'+ni('transfer').toLocaleString();
+  document.getElementById('s_total').textContent='¥'+t.toLocaleString();
+}
+function showStatus(msg,type){
+  const el=document.getElementById('statusBox');
+  el.className='status '+type;
+  el.textContent=msg;
+  el.style.display='block';
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+let records=[];
+try{records=JSON.parse(localStorage.getItem('kame_v4')||'[]');}catch(e){}
+
+async function submitRecord(){
+  const btn=document.getElementById('sendBtn');
+  btn.disabled=true;
+  btn.textContent='送信中...';
+  showStatus('スプレッドシートに送信しています...','loading');
+  const checked=[...document.querySelectorAll('#vehicleChecks input:checked')].map(i=>i.parentElement.textContent.trim()).join(' / ');
+  const r={
+    seq:gv('seqNo'),yearNo:gv('yearNo'),date:gv('date'),weekday:gv('weekday'),
+    customer:gv('customerName'),companion:gv('companion'),contact:gv('contact'),
+    depTime:gv('depTime'),depPlace:gv('depPlace'),viaTime:gv('viaTime'),viaPlace:gv('viaPlace'),
+    arrTime:gv('arrTime'),arrPlace:gv('arrPlace'),distance:gv('distance'),totalDist:gv('totalDist'),
+    care:gp('care'),handicap:gp('handicap'),equipment:gp('equipment'),
+    driver:gp('driver'),usage:gp('usage'),introRoute:gp('introRoute'),
+    cash:ni('cash'),credit:ni('credit'),taxiTicket:ni('taxiTicket'),
+    transfer:ni('transfer'),optionFee:ni('optionFee'),expense:ni('expense'),
+    total:ni('cash')+ni('credit')+ni('taxiTicket')+ni('transfer')+ni('optionFee'),
+    alcBVal:gv('alc_b_val'),alcBRes:gp('alc_before'),alcBTime:gv('alc_b_time'),alcBChecker:gv('alc_b_checker'),
+    alcAVal:gv('alc_a_val'),alcARes:gp('alc_after'),alcATime:gv('alc_a_time'),alcAChecker:gv('alc_a_checker'),
+    vehicleCheck:checked,vehicleNote:gv('vehicleNote'),remarks:gv('remarks'),
+    savedAt:new Date().toISOString()
+  };
+  try{
+    const res=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(r)});
+    const json=await res.json();
+    if(json.status==='ok'){
+      records.push(r);
+      try{localStorage.setItem('kame_v4',JSON.stringify(records));}catch(e){}
+      showStatus('送信完了！ '+( gv('date')||'')+' '+( gv('customerName')||'')+'さんの日報を保存しました。','ok');
+      renderStats();
+    }else{
+      showStatus('エラー: '+(json.message||'不明なエラー'),'err');
+    }
+  }catch(err){
+    showStatus('送信失敗。インターネット接続を確認してください。('+err.message+')','err');
+  }finally{
+    btn.disabled=false;
+    btn.textContent='スプレッドシートに送信して保存';
+  }
+}
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['input','stats'][i]===t));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+t).classList.add('active');
+  if(t==='stats') renderStats();
+  window.scrollTo(0,0);
+}
+
+function initStatSelects(){
+  const sy=document.getElementById('statYear');
+  const sm=document.getElementById('statMonth');
+  const yr=new Date().getFullYear();
+  for(let y=yr-2;y<=yr+1;y++){
+    const o=document.createElement('option');
+    o.value=y;o.textContent=y+'年';
+    if(y===yr)o.selected=true;
+    sy.appendChild(o);
+  }
+  for(let m=1;m<=12;m++){
+    const o=document.createElement('option');
+    o.value=m;o.textContent=m+'月';
+    if(m===new Date().getMonth()+1)o.selected=true;
+    sm.appendChild(o);
+  }
+}
+
+function renderStats(){
+  const mode=document.getElementById('statMode').value;
+  const yr=parseInt(document.getElementById('statYear').value);
+  const mo=parseInt(document.getElementById('statMonth').value);
+  document.getElementById('statMonth').style.display=mode==='month'?'':'none';
+  const filtered=records.filter(r=>{
+    if(!r.date)return false;
+    const d=new Date(r.date);
+    return mode==='month'?d.getFullYear()===yr&&d.getMonth()+1===mo:d.getFullYear()===yr;
+  });
+  const totAll=filtered.reduce((a,r)=>a+(r.total||0),0);
+  const totCash=filtered.reduce((a,r)=>a+(r.cash||0),0);
+  const totCredit=filtered.reduce((a,r)=>a+(r.credit||0),0);
+  const totTransfer=filtered.reduce((a,r)=>a+(r.transfer||0),0);
+  document.getElementById('statCards').innerHTML=`
+    <div class="sum-card"><div class="sum-val">${filtered.length}</div><div class="sum-lbl">件数</div></div>
+    <div class="sum-card"><div class="sum-val">¥${totAll.toLocaleString()}</div><div class="sum-lbl">合計売上</div></div>
+    <div class="sum-card"><div class="sum-val">¥${totCash.toLocaleString()}</div><div class="sum-lbl">現金</div></div>
+    <div class="sum-card"><div class="sum-val">¥${totCredit.toLocaleString()}</div><div class="sum-lbl">クレジット</div></div>`;
+  document.getElementById('statHead').innerHTML='<th>通し</th><th>日付</th><th>お客様</th><th>運転手</th><th>用途</th><th>経路</th><th>合計</th>';
+  const tb=document.getElementById('statBody');
+  tb.innerHTML='';
+  filtered.sort((a,b)=>a.date>b.date?1:-1).forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r.seq||''}</td><td>${r.date||''}</td><td>${r.customer||''}</td><td>${r.driver||''}</td><td>${r.usage||''}</td><td>${r.introRoute||''}</td><td>¥${(r.total||0).toLocaleString()}</td>`;
+    tb.appendChild(tr);
+  });
+  if(filtered.length>0){
+    const tr=document.createElement('tr');
+    tr.className='stat-sum';
+    tr.innerHTML=`<td colspan="6" style="text-align:right">合計</td><td>¥${totAll.toLocaleString()}</td>`;
+    tb.appendChild(tr);
+  }
+  const rc={},uc={};
+  filtered.forEach(r=>{
+    if(r.introRoute)rc[r.introRoute]=(rc[r.introRoute]||0)+1;
+    if(r.usage)uc[r.usage]=(uc[r.usage]||0)+1;
+  });
+  renderBar('routeBar',rc,filtered.length);
+  renderBar('usageBar',uc,filtered.length);
+}
+
+function renderBar(id,counts,total){
+  const el=document.getElementById(id);
+  el.innerHTML='';
+  Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{
+    const pct=total>0?Math.round(v/total*100):0;
+    el.innerHTML+=`<div class="bar-row"><span class="bar-lbl">${k}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><span class="bar-val">${v}件 ${pct}%</span></div>`;
+  });
+  if(!Object.keys(counts).length)el.innerHTML='<span style="font-size:14px;color:#999">データなし</span>';
+}
+
+function exportCSV(){
+  if(!records.length){alert('保存されたデータがありません');return;}
+  const h=['通し番号','今年番号','日付','曜日','お客様氏名','同乗者','連絡先','出発時刻','出発場所','経由時刻','経由地','到着時刻','到着場所','距離','走行距離','ケアサービス','障害割引','機材オプション','運転手名','利用用途','紹介経路','現金','クレジット','タクシー券','生保振込','オプション','実費','合計','アル乗前値','アル乗前結果','乗前時刻','乗前確認者','アル乗後値','アル乗後結果','乗後時刻','乗後確認者','車両点検','点検特記','備考'];
+  const esc=v=>`"${String(v||'').replace(/"/g,'""')}"`;
+  const rows=records.map(r=>[r.seq,r.yearNo,r.date,r.weekday,r.customer,r.companion,r.contact,r.depTime,r.depPlace,r.viaTime,r.viaPlace,r.arrTime,r.arrPlace,r.distance,r.totalDist,r.care,r.handicap,r.equipment,r.driver,r.usage,r.introRoute,r.cash,r.credit,r.taxiTicket,r.transfer,r.optionFee,r.expense,r.total,r.alcBVal,r.alcBRes,r.alcBTime,r.alcBChecker,r.alcAVal,r.alcARes,r.alcATime,r.alcAChecker,r.vehicleCheck,r.vehicleNote,r.remarks].map(esc).join(','));
+  const blob=new Blob(['\uFEFF'+h.join(',')+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='かめライフサポート_日報バックアップ.csv';
+  a.click();
+}
+
+initStatSelects();
+document.getElementById('date').valueAsDate=new Date();
+onDateChange();
+</script>
+</body>
+</html>
